@@ -1,0 +1,84 @@
+variables:
+  PLUGIN_NAME: ''
+  PLUGIN_MAIN_FILE: ''
+
+stages:
+  - build
+  - archive
+  - deploy
+
+node_build:
+  artifacts:
+    paths:
+      - dist/
+  stage: build
+  image: node:12
+  before_script:
+    - npm install -g yarn
+  script:
+    - yarn
+    - yarn build
+  only:
+    - tags
+    - gitlab-ci
+
+composer_build:
+  artifacts:
+    paths:
+      - vendor/
+  stage: build
+  image: php:7.2-cli-alpine
+  before_script:
+    - apk add git sqlite sqlite-dev zlib-dev composer
+    - docker-php-ext-install zip mbstring pdo_sqlite pcntl bcmath
+    - docker-php-ext-enable zip
+    - docker-php-ext-enable mbstring
+    - docker-php-ext-enable pdo_sqlite
+    - docker-php-ext-enable pcntl
+    - docker-php-ext-enable bcmath
+  script:
+    - composer install --no-progress --no-interaction --no-dev
+  only:
+    - tags
+    - gitlab-ci
+
+archive_package:
+  stage: archive
+  artifacts:
+    paths:
+    - $PLUGIN_NAME-$CI_COMMIT_TAG.zip
+  dependencies:
+    - composer_build
+    - node_build
+  script:
+  - sed -i -- "s/_version/$CI_COMMIT_TAG/g" *.json
+  - sed -i -- "s/_version/$CI_COMMIT_TAG/g" *.php
+  - git archive -o $PLUGIN_NAME-$CI_COMMIT_TAG.zip --prefix=$PLUGIN_NAME/ HEAD
+  - mkdir -p $PLUGIN_NAME
+  - cp -r vendor $PLUGIN_NAME/
+  - cp -r dist $PLUGIN_NAME/
+  - cp $(git status -s -uno | cut -c4-) $PLUGIN_NAME/
+  - zip -ur $PLUGIN_NAME-$CI_COMMIT_TAG.zip $PLUGIN_NAME/*
+  only:
+  - tags
+  - gitlab-ci
+  tags:
+  - altair
+
+deploy_package:
+  stage: deploy
+  dependencies:
+  - archive_package
+  before_script:
+  - sudo -u plugins mkdir -p /home/plugins/web/plugins.nodopiano.it/public_html/$PLUGIN_NAME/
+  script:
+  - sed -i -- "s/_version/$CI_COMMIT_TAG/g" metadata.json
+  - sudo -u plugins rsync -av metadata.json /home/plugins/web/plugins.nodopiano.it/public_html/$PLUGIN_NAME/
+  - sudo -u plugins rsync -av $PLUGIN_NAME-$CI_COMMIT_TAG.zip /home/plugins/web/plugins.nodopiano.it/public_html/$PLUGIN_NAME/
+  environment:
+    name: $PLUGIN_NAME-$CI_COMMIT_TAG
+    url: https://plugins.nodopiano.it/$PLUGIN_NAME/$PLUGIN_NAME-$CI_COMMIT_TAG.zip
+  only:
+  - tags
+  tags:
+  - altair

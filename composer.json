@@ -1,0 +1,29 @@
+{
+    "name": "nodopiano/np-cookie-solution",
+    "description": "Il plugin per la gestione di cookies e scripts di Nodopiano.",
+    "type": "project",
+    "authors": [
+        {
+            "name": "Nodopiano",
+            "email": "info@nodopiano.it"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Nodopiano\\ExamplePlugin\\": "src/app/"
+        }
+    },
+    "repositories": [
+        {
+            "type": "git",
+            "url": "https://github.com/YahnisElsts/plugin-update-checker.git"
+        }
+    ],
+    "require": {
+        "symfony/finder": "^4.2",
+        "yahnis-elsts/plugin-update-checker": "^4.6"
+    },
+    "require-dev": {
+        "symfony/var-dumper": "^4.2"
+    }
+}

@@ -1,0 +1,9 @@
+{
+    "name" : "Your plugin name",
+    "version" : "_version",
+    "author" : "Nodopiano",
+    "download_url" : "your_plugin_resource.zip",
+    "sections" : {
+        "description" : "Your plugin description"
+    }
+}
