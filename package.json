@@ -1,6 +1,6 @@
 {
   "name": "your-plugin-name",
-  "version": "_version",
+  "version": "0.0.1",
   "private": true,
   "scripts": {
     "build": "vue-cli-service build",
